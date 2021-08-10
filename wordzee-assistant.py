@@ -19,6 +19,10 @@ MIN_NUMBER_OF_LETTERS = 1
 WORDS_FILE = "/usr/share/dict/words"
 
 
+class Error(Exception):
+    pass
+
+
 def get_arguments():
     parser = argparse.ArgumentParser(prog=SCRIPT_NAME, description=__doc__)
 
@@ -75,7 +79,13 @@ def get_logger(
 def get_intersection(these_words, those_words):
     assert isinstance(these_words, Iterable)
     assert isinstance(those_words, Iterable)
-    return list(set(these_words) & set(those_words))
+
+    intersection = set(these_words) & set(those_words)
+
+    if len(intersection) == 0:
+        raise Error("No matching words found")
+
+    return list(intersection)
 
 
 def get_unique_permutations(letters):
@@ -107,6 +117,9 @@ def main():
 
     except KeyboardInterrupt:
         logger.info("script interrupted")
+    except Error as exc:
+        logger.error(exc)
+        code = 1
     except Exception as exc:
         logger.exception(exc)
         code = 255
