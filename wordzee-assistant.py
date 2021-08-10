@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-"""A tool for assisting."""
+"""A tool for finding words for the popular Wordzee game based on a number of
+letters provided as input."""
 
 import argparse
 import logging
