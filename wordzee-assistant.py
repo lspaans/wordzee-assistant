@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-"""A tool for finding words for the popular Wordzee game based on a number of
-letters provided as input."""
+"""A tool for finding words for the popular Wordzee game based on a number
+of letters provided as input."""
 
 import argparse
 import logging
@@ -15,7 +15,7 @@ SCRIPT_NAME = os.path.basename(sys.argv[0])
 DEBUG = False
 LOG_FORMAT = "%(message)s"
 
-MIN_NUMBER_OF_LETTERS = 1
+MIN_WORD_LENGTH = 1
 
 WORDS_FILE = "/usr/share/dict/words"
 
@@ -44,6 +44,15 @@ def get_arguments():
     )
 
     parser.add_argument(
+        "-m",
+        "--min-word-length",
+        default=MIN_WORD_LENGTH,
+        help=f"minimum word length (default: {MIN_WORD_LENGTH})",
+        metavar="NUM",
+        type=int,
+    )
+
+    parser.add_argument(
         "letters",
         help='letters (e.g."asdf")',
         metavar="LETTERS",
@@ -51,7 +60,7 @@ def get_arguments():
 
     arguments = parser.parse_args()
 
-    assert len(arguments.letters) >= MIN_NUMBER_OF_LETTERS
+    assert len(arguments.letters) >= arguments.min_word_length
 
     return arguments
 
@@ -89,12 +98,13 @@ def get_intersection(these_words, those_words):
     return list(intersection)
 
 
-def get_unique_permutations(letters):
+def get_unique_permutations(letters, min_word_length=MIN_WORD_LENGTH):
     assert isinstance(letters, Iterable)
     return list(
         set([
             "".join(permutation).lower()
-            for permutation in permutations(letters)
+            for length in range(min_word_length, len(letters) + 1)
+            for permutation in permutations(letters, length)
         ])
     )
 
@@ -110,9 +120,16 @@ def main():
     code = 0
 
     try:
-        for match in get_intersection(
-            get_words_from_file(arguments.words_file),
-            get_unique_permutations([char for char in arguments.letters]),
+        for match in sorted(
+            get_intersection(
+                get_words_from_file(arguments.words_file),
+                get_unique_permutations(
+                    [char for char in arguments.letters],
+                    arguments.min_word_length,
+                ),
+            ),
+            key=lambda word: len(word),
+            reverse=True
         ):
             logger.info(match)
 
